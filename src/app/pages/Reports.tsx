@@ -1,348 +1,463 @@
-import { Calendar, Download, Filter, Search, ChevronRight } from "lucide-react";
-import { AreaChart, Area, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { useState } from "react";
+import { TrendingUp, TrendingDown, Filter, SlidersHorizontal } from "lucide-react";
+import {
+  AreaChart, Area, BarChart, Bar, LineChart, Line, ComposedChart,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from "recharts";
 
-const reports = [
+// ── Types ──────────────────────────────────────────────────────────────────────
+type TabKey = "growth" | "retention" | "monetization" | "engagement";
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+
+const growthData = [
+  { date: "Mar 1",  dau: 16800, nru: 1820, mau: 55200 },
+  { date: "Mar 5",  dau: 17600, nru: 2010, mau: 57100 },
+  { date: "Mar 10", dau: 18900, nru: 2240, mau: 59400 },
+  { date: "Mar 15", dau: 19800, nru: 2390, mau: 61200 },
+  { date: "Mar 20", dau: 21200, nru: 2580, mau: 63100 },
+  { date: "Mar 25", dau: 22100, nru: 2820, mau: 64200 },
+];
+
+const retentionBars = [
+  { game: "Stellar Quest", d1: 62, d7: 76, d14: 54, d30: 41 },
+  { game: "Ocean Voyage",  d1: 58, d7: 68, d14: 48, d30: 36 },
+  { game: "Mystery Tower", d1: 60, d7: 72, d14: 51, d30: 39 },
+  { game: "Dragon Empire", d1: 54, d7: 64, d14: 44, d30: 32 },
+];
+
+const retentionTrend = [
+  { week: "W8",  d7: 62, d14: 46, d30: 35 },
+  { week: "W9",  d7: 64, d14: 48, d30: 36 },
+  { week: "W10", d7: 66, d14: 50, d30: 37 },
+  { week: "W11", d7: 68, d14: 52, d30: 38 },
+  { week: "W12", d7: 68, d14: 54, d30: 41 },
+];
+
+const monetizationData = [
+  { date: "Mar 12", revenue: 312, arpdau: 3.8 },
+  { date: "Mar 14", revenue: 325, arpdau: 3.9 },
+  { date: "Mar 16", revenue: 368, arpdau: 4.1 },
+  { date: "Mar 18", revenue: 395, arpdau: 4.3 },
+  { date: "Mar 20", revenue: 412, arpdau: 4.5 },
+  { date: "Mar 22", revenue: 432, arpdau: 4.6 },
+  { date: "Mar 24", revenue: 445, arpdau: 4.8 },
+];
+
+const monetizationByGame = [
+  { game: "Stellar Quest", revenue: 145, arpdau: 4.23 },
+  { game: "Ocean Voyage",  revenue: 132, arpdau: 3.84 },
+  { game: "Mystery Tower", revenue: 99,  arpdau: 3.62 },
+  { game: "Dragon Empire", revenue: 69,  arpdau: 2.91 },
+];
+
+const engagementData = [
+  { time: "00:00", sessions: 8200,  avgDuration: 18 },
+  { time: "04:00", sessions: 5400,  avgDuration: 14 },
+  { time: "08:00", sessions: 12600, avgDuration: 22 },
+  { time: "12:00", sessions: 19800, avgDuration: 26 },
+  { time: "16:00", sessions: 24200, avgDuration: 29 },
+  { time: "20:00", sessions: 28900, avgDuration: 32 },
+  { time: "23:00", sessions: 21400, avgDuration: 27 },
+];
+
+const featureEngagement = [
+  { feature: "Daily Quest",     usage: 84 },
+  { feature: "Guild Battle",    usage: 71 },
+  { feature: "Gacha Pull",      usage: 63 },
+  { feature: "Ranked Match",    usage: 58 },
+  { feature: "Story Mode",      usage: 49 },
+  { feature: "Social Gifting",  usage: 38 },
+];
+
+const TOOLTIP_STYLE = {
+  backgroundColor: "#ffffff",
+  border: "1px solid #e8eaed",
+  borderRadius: "16px",
+  fontSize: "12px",
+  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+};
+
+const AXIS_PROPS = { stroke: "#9aa0a6", fontSize: 11, tickLine: false as const };
+
+// ── Tabs Config ────────────────────────────────────────────────────────────────
+
+const TABS: { key: TabKey; label: string; color: string; kpis: { label: string; value: string; delta: string; up: boolean }[] }[] = [
   {
-    id: "RPT-2026-0325-001",
-    title: "Weekly Performance Briefing",
-    date: "March 25, 2026",
-    timestamp: "09:24",
-    status: "current",
-    summary: "Strong revenue momentum continues with weekend performance exceeding forecasts by 18%. Player retention across core titles shows consistent improvement.",
-    metrics: {
-      revenue: 445200,
-      growth: 12.4,
-      players: 21542,
-      engagement: 8.2
-    }
+    key: "growth",
+    label: "Growth",
+    color: "#5e8fff",
+    kpis: [
+      { label: "DAU", value: "22,100", delta: "+8.2%", up: true },
+      { label: "MAU", value: "64,200", delta: "+5.1%", up: true },
+      { label: "DAU / MAU", value: "34.4%", delta: "+0.9pp", up: true },
+      { label: "NRU", value: "2,820",  delta: "+12.4%", up: true },
+    ],
   },
   {
-    id: "RPT-2026-0318-001",
-    title: "Weekly Performance Briefing",
-    date: "March 18, 2026",
-    timestamp: "09:15",
-    status: "archived",
-    summary: "Steady growth in core metrics with notable improvement in conversion rates. Mobile platform showing strongest gains week-over-week.",
-    metrics: {
-      revenue: 396800,
-      growth: 8.7,
-      players: 19920,
-      engagement: 6.4
-    }
+    key: "retention",
+    label: "Retention",
+    color: "#00f5a0",
+    kpis: [
+      { label: "D1 Avg", value: "59.3%", delta: "+1.2pp", up: true },
+      { label: "D7 Avg", value: "68.4%", delta: "+2.1pp", up: true },
+      { label: "D14 Avg", value: "51.8%", delta: "+1.5pp", up: true },
+      { label: "D30 Avg", value: "37.0%", delta: "-0.3pp", up: false },
+    ],
   },
   {
-    id: "RPT-2026-0311-001",
-    title: "Weekly Performance Briefing",
-    date: "March 11, 2026",
-    timestamp: "09:20",
-    status: "archived",
-    summary: "Platform stability improvements reflect in session duration metrics. New content launch in Stellar Quest drove engagement increase.",
-    metrics: {
-      revenue: 365200,
-      growth: 5.2,
-      players: 18710,
-      engagement: 4.8
-    }
+    key: "monetization",
+    label: "Monetization",
+    color: "#ff8c69",
+    kpis: [
+      { label: "Daily Revenue", value: "$462k",  delta: "+12.4%", up: true },
+      { label: "ARPDAU",        value: "$4.82",   delta: "+$0.18", up: true },
+      { label: "Conversion",    value: "7.0%",    delta: "-0.1pp", up: false },
+      { label: "LTV 30d",       value: "$18.40",  delta: "+$1.20", up: true },
+    ],
+  },
+  {
+    key: "engagement",
+    label: "Engagement",
+    color: "#b8a3ff",
+    kpis: [
+      { label: "Avg Session",   value: "28m 14s", delta: "+4.2%",  up: true },
+      { label: "Sessions/User", value: "3.8",      delta: "+0.4",   up: true },
+      { label: "Feature Usage", value: "84%",      delta: "+3pp",   up: true },
+      { label: "Churn Rate",    value: "2.1%",     delta: "-0.3pp", up: true },
+    ],
   },
 ];
 
-const revenueComparison = [
-  { week: "W9", current: 365200, previous: 347100 },
-  { week: "W10", current: 396800, previous: 365200 },
-  { week: "W11", current: 445200, previous: 396800 },
-];
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function KpiChip({ label, value, delta, up }: { label: string; value: string; delta: string; up: boolean }) {
+  return (
+    <div className="bg-white rounded-2xl px-5 py-4 border border-[#e8eaed]">
+      <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-1">{label}</div>
+      <div className="font-mono text-xl font-bold text-[#1f1f1f] mb-1">{value}</div>
+      <div className={`flex items-center gap-1 text-xs font-mono font-semibold ${up ? "text-[#1a7a4a]" : "text-[#c0392b]"}`}>
+        {up ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+        {delta}
+      </div>
+    </div>
+  );
+}
+
+// ── Tab content ─────────────────────────────────────────────────────────────
+
+function GrowthView() {
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="text-xs text-[#9aa0a6] font-medium mb-2">DAU & MAU Trend · Mar 1 – 25</div>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={growthData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f4" vertical={false} />
+              <XAxis dataKey="date" {...AXIS_PROPS} axisLine={{ stroke: "#e8eaed" }} />
+              <YAxis {...AXIS_PROPS} axisLine={false} yAxisId="left" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <YAxis {...AXIS_PROPS} axisLine={false} yAxisId="right" orientation="right" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => [v.toLocaleString(), ""]} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "#5f6368" }} />
+              <Bar dataKey="nru" fill="#ffb3d9" name="NRU" radius={[4, 4, 0, 0]} barSize={16} yAxisId="right" />
+              <Area type="monotone" dataKey="dau" stroke="#5e8fff" fill="#5e8fff1a" strokeWidth={2.5} name="DAU" dot={false} yAxisId="left" />
+              <Line type="monotone" dataKey="mau" stroke="#00f5a0" strokeWidth={2} name="MAU" dot={false} yAxisId="left" strokeDasharray="6 3" />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function RetentionView() {
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="text-xs text-[#9aa0a6] font-medium mb-2">Retention by Game (D1 / D7 / D14 / D30)</div>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={retentionBars} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f4" horizontal={false} />
+              <XAxis type="number" {...AXIS_PROPS} axisLine={{ stroke: "#e8eaed" }} unit="%" domain={[0, 90]} />
+              <YAxis type="category" dataKey="game" {...AXIS_PROPS} axisLine={false} width={100} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => [`${v}%`, ""]} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "#5f6368" }} />
+              <Bar dataKey="d1"  fill="#5e8fff" name="D1"  radius={[0, 4, 4, 0]} barSize={8} />
+              <Bar dataKey="d7"  fill="#00f5a0" name="D7"  radius={[0, 4, 4, 0]} barSize={8} />
+              <Bar dataKey="d14" fill="#ffb3d9" name="D14" radius={[0, 4, 4, 0]} barSize={8} />
+              <Bar dataKey="d30" fill="#ff8c69" name="D30" radius={[0, 4, 4, 0]} barSize={8} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <div>
+        <div className="text-xs text-[#9aa0a6] font-medium mb-2">D7 / D14 / D30 Trend · Weekly</div>
+        <div className="h-44">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={retentionTrend}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f4" vertical={false} />
+              <XAxis dataKey="week" {...AXIS_PROPS} axisLine={{ stroke: "#e8eaed" }} />
+              <YAxis {...AXIS_PROPS} axisLine={false} unit="%" />
+              <Tooltip contentStyle={TOOLTIP_STYLE} formatter={(v: number) => [`${v}%`, ""]} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "#5f6368" }} />
+              <Line type="monotone" dataKey="d7"  stroke="#5e8fff" strokeWidth={2.5} dot={{ r: 4, fill: "#5e8fff" }} name="D7" />
+              <Line type="monotone" dataKey="d14" stroke="#00f5a0" strokeWidth={2.5} dot={{ r: 4, fill: "#00f5a0" }} name="D14" />
+              <Line type="monotone" dataKey="d30" stroke="#ff8c69" strokeWidth={2.5} dot={{ r: 4, fill: "#ff8c69" }} name="D30" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MonetizationView() {
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="text-xs text-[#9aa0a6] font-medium mb-2">Daily Revenue & ARPDAU · Mar 12 – 24</div>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={monetizationData}>
+              <defs>
+                <linearGradient id="revMonGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#ff8c69" stopOpacity={0.25} />
+                  <stop offset="100%" stopColor="#ff8c69" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f4" vertical={false} />
+              <XAxis dataKey="date" {...AXIS_PROPS} axisLine={{ stroke: "#e8eaed" }} />
+              <YAxis {...AXIS_PROPS} axisLine={false} yAxisId="left" tickFormatter={(v) => `$${v}k`} />
+              <YAxis {...AXIS_PROPS} axisLine={false} yAxisId="right" orientation="right" tickFormatter={(v) => `$${v}`} />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "#5f6368" }} />
+              <Area type="monotone" dataKey="revenue" stroke="#ff8c69" fill="url(#revMonGrad)" strokeWidth={2.5} name="Revenue ($k)" yAxisId="left" dot={false} />
+              <Line type="monotone" dataKey="arpdau" stroke="#5e8fff" strokeWidth={2} name="ARPDAU ($)" yAxisId="right" dot={{ r: 4, fill: "#5e8fff" }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <div>
+        <div className="text-xs text-[#9aa0a6] font-medium mb-3">Revenue by Game</div>
+        <div className="space-y-2">
+          {monetizationByGame.map((g) => (
+            <div key={g.game} className="flex items-center gap-3">
+              <div className="w-28 text-sm font-medium text-[#1f1f1f] flex-shrink-0">{g.game}</div>
+              <div className="flex-1 bg-[#f1f3f4] rounded-full h-2.5 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-[#ff8c69]"
+                  style={{ width: `${(g.revenue / 145) * 100}%` }}
+                />
+              </div>
+              <div className="w-16 text-right font-mono text-sm font-semibold text-[#1f1f1f]">${g.revenue}k</div>
+              <div className="w-20 text-right font-mono text-xs text-[#5f6368]">ARPDAU ${g.arpdau}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function EngagementView() {
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="text-xs text-[#9aa0a6] font-medium mb-2">Sessions & Avg Duration by Hour of Day</div>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <ComposedChart data={engagementData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f3f4" vertical={false} />
+              <XAxis dataKey="time" {...AXIS_PROPS} axisLine={{ stroke: "#e8eaed" }} />
+              <YAxis {...AXIS_PROPS} axisLine={false} yAxisId="left" tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`} />
+              <YAxis {...AXIS_PROPS} axisLine={false} yAxisId="right" orientation="right" unit="m" />
+              <Tooltip contentStyle={TOOLTIP_STYLE} />
+              <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 11, color: "#5f6368" }} />
+              <Bar dataKey="sessions" fill="#b8a3ff" name="Sessions" radius={[4, 4, 0, 0]} barSize={24} yAxisId="left" />
+              <Line type="monotone" dataKey="avgDuration" stroke="#ff8c69" strokeWidth={2.5} name="Avg Duration (min)" yAxisId="right" dot={{ r: 4, fill: "#ff8c69" }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+      <div>
+        <div className="text-xs text-[#9aa0a6] font-medium mb-3">Feature Engagement Rate</div>
+        <div className="space-y-2">
+          {featureEngagement.map((f) => (
+            <div key={f.feature} className="flex items-center gap-3">
+              <div className="w-28 text-sm font-medium text-[#1f1f1f] flex-shrink-0">{f.feature}</div>
+              <div className="flex-1 bg-[#f1f3f4] rounded-full h-2.5 overflow-hidden">
+                <div className="h-full rounded-full bg-[#b8a3ff]" style={{ width: `${f.usage}%` }} />
+              </div>
+              <div className="w-10 text-right font-mono text-sm font-semibold text-[#1f1f1f]">{f.usage}%</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
 
 export function Reports() {
-  const currentReport = reports[0];
+  const [activeTab, setActiveTab] = useState<TabKey>("growth");
+  const tab = TABS.find((t) => t.key === activeTab)!;
+
+  const renderContent = () => {
+    if (activeTab === "growth") return <GrowthView />;
+    if (activeTab === "retention") return <RetentionView />;
+    if (activeTab === "monetization") return <MonetizationView />;
+    return <EngagementView />;
+  };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="bg-white border-b border-[#e8eaed]">
-        <div className="px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="mb-1">Reports</h1>
-              <p className="text-[#5f6368] text-sm">Executive summaries and analytical briefings</p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button className="p-2.5 text-[#5f6368] hover:text-[#1f1f1f] hover:bg-[#f8f9fa] rounded-full transition-colors">
-                <Filter className="w-5 h-5" />
-              </button>
-              <button className="p-2.5 text-[#5f6368] hover:text-[#1f1f1f] hover:bg-[#f8f9fa] rounded-full transition-colors">
-                <Search className="w-5 h-5" />
-              </button>
-            </div>
+      <div className="border-b border-[#e8eaed] px-8 py-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-1">Supporting Analysis</div>
+            <h1 className="text-[#1f1f1f]">Reports</h1>
+            <p className="text-sm text-[#5f6368] mt-0.5">
+              Deep-dive analytics by category · Rectangles · Mar 25, 2026 · D-2 confirmed data
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button className="flex items-center gap-2 px-4 py-2 border border-[#e8eaed] text-[#5f6368] text-sm rounded-full hover:bg-[#f8f9fa] transition-colors">
+              <Filter className="w-3.5 h-3.5" />
+              Filter
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 border border-[#e8eaed] text-[#5f6368] text-sm rounded-full hover:bg-[#f8f9fa] transition-colors">
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              Compare
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="px-8 py-6 max-w-[1400px] mx-auto">
-        {/* Current Report */}
-        <article className="mb-8">
-          <div className="bg-[#5e8fff] rounded-[40px] overflow-hidden">
-            {/* Report Header */}
-            <div className="px-10 pt-10 pb-8 text-white">
-              <div className="flex items-start justify-between mb-6">
-                <div>
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="px-3 py-1.5 bg-[#00f5a0] text-[#1f1f1f] text-xs font-bold rounded-full">
-                      LIVE
-                    </div>
-                    <div className="text-xs uppercase tracking-wider font-medium opacity-90">
-                      Current Period
-                    </div>
-                  </div>
-                  <h2 className="mb-3 text-white" style={{ fontSize: '1.75rem' }}>
-                    {currentReport.title}
-                  </h2>
-                  <div className="flex items-center gap-4 text-sm opacity-90">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      {currentReport.date}
-                    </div>
-                    <div className="font-mono text-xs bg-white/20 px-2.5 py-1 rounded-full">
-                      {currentReport.id}
-                    </div>
-                  </div>
-                </div>
-                <button className="flex items-center gap-2 px-5 py-2.5 bg-[#1f1f1f] text-white rounded-full text-sm hover:bg-[#3c4043] transition-colors">
-                  <Download className="w-4 h-4" />
-                  Export PDF
-                </button>
-              </div>
-
-              {/* Key Metrics Row */}
-              <div className="grid grid-cols-4 gap-6 pt-6">
-                <MetricDisplay
-                  label="Revenue"
-                  value={`$${currentReport.metrics.revenue.toLocaleString()}`}
-                  change={`+${currentReport.metrics.growth}%`}
-                />
-                <MetricDisplay
-                  label="Active Players"
-                  value={currentReport.metrics.players.toLocaleString()}
-                  change={`+${currentReport.metrics.engagement}%`}
-                />
-                <MetricDisplay
-                  label="Week-over-Week"
-                  value={`+${currentReport.metrics.growth}%`}
-                  change="vs W10"
-                />
-                <MetricDisplay
-                  label="Status"
-                  value="On Target"
-                  change="+18% vs forecast"
-                />
-              </div>
-            </div>
-
-            {/* Report Body */}
-            <div className="bg-white px-10 py-8 rounded-t-[40px]">
-              <div className="mb-8">
-                <h3 className="mb-4">Executive Summary</h3>
-                <p className="text-[#1f1f1f] leading-relaxed text-base mb-4">
-                  {currentReport.summary}
-                </p>
-                <p className="text-[#1f1f1f] leading-relaxed text-base">
-                  Key drivers include sustained player engagement in flagship titles and successful 
-                  weekend promotional campaigns. Platform-wide session duration increased to an average 
-                  of <span className="font-mono font-semibold text-[#5e8fff]">24m 32s</span>, with 
-                  conversion metrics ahead of quarterly targets.
-                </p>
-              </div>
-
-              {/* Inline Chart */}
-              <div className="mb-8 bg-[#f8f9fa] rounded-3xl p-6 border border-[#e8eaed]">
-                <div className="mb-4">
-                  <h4 className="mb-1">Revenue Trajectory</h4>
-                  <p className="text-sm text-[#5f6368]">Three-week comparison</p>
-                </div>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={revenueComparison}>
-                      <defs>
-                        <linearGradient id="currentGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#5e8fff" stopOpacity={0.3} />
-                          <stop offset="100%" stopColor="#5e8fff" stopOpacity={0.05} />
-                        </linearGradient>
-                      </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e8eaed" vertical={false} />
-                      <XAxis
-                        dataKey="week"
-                        stroke="#5f6368"
-                        fontSize={11}
-                        tickLine={false}
-                        axisLine={{ stroke: '#e8eaed' }}
-                      />
-                      <YAxis
-                        stroke="#5f6368"
-                        fontSize={11}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: '#ffffff',
-                          border: '1px solid #e8eaed',
-                          borderRadius: '16px',
-                          fontSize: '11px',
-                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        }}
-                        formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
-                      />
-                      <Area
-                        type="monotone"
-                        dataKey="current"
-                        stroke="#5e8fff"
-                        strokeWidth={3}
-                        fill="url(#currentGradient)"
-                        name="Current Week"
-                      />
-                    </AreaChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Findings */}
-              <div className="mb-8">
-                <h3 className="mb-4">Key Findings</h3>
-                <div className="space-y-4">
-                  <Finding
-                    title="Weekend Performance Peak"
-                    content="Saturday and Sunday combined accounted for 42% of weekly revenue, marking the highest weekend concentration this quarter. Mobile conversion rates during peak hours exceeded desktop for the first time."
-                    bgColor="#ffb3d9"
-                  />
-                  <Finding
-                    title="Retention Improvement"
-                    content="Day-7 retention across flagship titles improved to 68%, up from 64% the previous week. Player cohorts from the recent content update show particularly strong engagement patterns."
-                    bgColor="#00f5a0"
-                  />
-                  <Finding
-                    title="Regional Growth"
-                    content="European markets contributed 34% of total revenue this week, showing 15% growth versus the prior period. APAC regions maintained steady performance with stable conversion metrics."
-                    bgColor="#ff8c69"
-                  />
-                </div>
-              </div>
-
-              {/* Recommendations */}
-              <div className="bg-[#f8f9fa] rounded-3xl p-6 border border-[#e8eaed]">
-                <h4 className="mb-4">Recommended Actions</h4>
-                <ul className="space-y-3 text-[#1f1f1f]">
-                  <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-[#5e8fff] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <ChevronRight className="w-4 h-4 text-white" />
-                    </div>
-                    <span>Continue weekend promotional strategy with increased allocation for peak traffic hours</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-[#00f5a0] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <ChevronRight className="w-4 h-4 text-[#1f1f1f]" />
-                    </div>
-                    <span>Expand mobile optimization efforts to capitalize on growing conversion advantage</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-[#ff8c69] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <ChevronRight className="w-4 h-4 text-[#1f1f1f]" />
-                    </div>
-                    <span>Monitor European market trends closely for potential scaling opportunities</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        {/* Report Archive */}
-        <div>
-          <div className="mb-6">
-            <h3>Previous Reports</h3>
-            <p className="text-sm text-[#5f6368]">Historical briefings and analysis</p>
-          </div>
-
-          <div className="space-y-4">
-            {reports.slice(1).map((report) => (
+      <div className="flex h-[calc(100vh-81px)]">
+        {/* ── Main Analysis Area ──────────────────────────────────────────── */}
+        <div className="flex-1 overflow-auto px-8 py-6">
+          {/* Tab nav */}
+          <div className="flex gap-1 mb-6 bg-[#f8f9fa] p-1 rounded-2xl w-fit">
+            {TABS.map((t) => (
               <button
-                key={report.id}
-                className="w-full bg-white rounded-3xl p-6 border border-[#e8eaed] hover:border-[#5e8fff] hover:shadow-md transition-all duration-200 text-left group"
+                key={t.key}
+                onClick={() => setActiveTab(t.key)}
+                className={`px-5 py-2 rounded-xl text-sm font-medium transition-all duration-150 ${
+                  activeTab === t.key
+                    ? "bg-white text-[#1f1f1f] shadow-sm"
+                    : "text-[#5f6368] hover:text-[#1f1f1f]"
+                }`}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="text-xs uppercase tracking-wider text-[#5f6368] mb-2 font-medium">
-                      {report.date}
-                    </div>
-                    <h4 className="mb-2 group-hover:text-[#5e8fff] transition-colors">
-                      {report.title}
-                    </h4>
-                  </div>
-                  <div className="font-mono text-xs text-[#5f6368] bg-[#f8f9fa] px-2.5 py-1 rounded-full">
-                    {report.id}
-                  </div>
-                </div>
-                <p className="text-sm text-[#5f6368] mb-4 line-clamp-2">
-                  {report.summary}
-                </p>
-                <div className="flex items-center gap-6 text-xs font-mono">
-                  <div className="text-[#5f6368]">
-                    Revenue: <span className="text-[#1f1f1f] font-semibold">${report.metrics.revenue.toLocaleString()}</span>
-                  </div>
-                  <div className="text-[#5f6368]">
-                    Growth: <span className="text-[#00f5a0] font-semibold">+{report.metrics.growth}%</span>
-                  </div>
-                  <div className="text-[#5f6368]">
-                    Players: <span className="text-[#1f1f1f] font-semibold">{report.metrics.players.toLocaleString()}</span>
-                  </div>
-                </div>
+                {t.label}
               </button>
             ))}
           </div>
+
+          {/* KPI row */}
+          <div className="grid grid-cols-4 gap-3 mb-6">
+            {tab.kpis.map((k) => (
+              <KpiChip key={k.label} {...k} />
+            ))}
+          </div>
+
+          {/* Chart area */}
+          <div
+            className="bg-white rounded-3xl p-6 border"
+            style={{ borderColor: tab.color + "40" }}
+          >
+            <div className="flex items-center gap-3 mb-5">
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: tab.color }} />
+              <h3 className="text-[#1f1f1f]">{tab.label} Analysis</h3>
+              <div className="ml-auto font-mono text-xs text-[#9aa0a6]">Mar 25, 2026 · Rectangles</div>
+            </div>
+            {renderContent()}
+          </div>
         </div>
-      </div>
-    </div>
-  );
-}
 
-interface MetricDisplayProps {
-  label: string;
-  value: string;
-  change: string;
-}
+        {/* ── Right Operator Panel ────────────────────────────────────────── */}
+        <aside className="w-72 border-l border-[#e8eaed] flex-shrink-0 overflow-auto px-5 py-6">
+          <div className="mb-6">
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-1">Quiet Operator Layer</div>
+            <p className="text-sm text-[#1f1f1f] font-semibold leading-snug">
+              Output and operation status confirm from this layer.
+            </p>
+            <p className="text-xs text-[#5f6368] mt-2 leading-relaxed">
+              To not interfere with the watchtower reading, operation logs and delivery status remain in the supporting zone.
+            </p>
+          </div>
 
-function MetricDisplay({ label, value, change }: MetricDisplayProps) {
-  return (
-    <div>
-      <div className="text-xs uppercase tracking-wider mb-2 font-medium opacity-90">
-        {label}
-      </div>
-      <div className="font-mono text-xl font-bold mb-1">
-        {value}
-      </div>
-      <div className="text-xs opacity-80">
-        {change}
-      </div>
-    </div>
-  );
-}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold">Operations</div>
+              <div className="text-xs text-[#5f6368] font-mono">Report 1 · New highlight pending</div>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: "Weekly Briefing", status: "delivered", time: "09:00" },
+                { label: "Daily Summary",   status: "delivered", time: "08:00" },
+                { label: "Slack Alert",     status: "pending",   time: "--:--" },
+              ].map((op) => (
+                <div key={op.label} className="flex items-center justify-between py-2.5 border-b border-[#f1f3f4]">
+                  <div>
+                    <div className="text-sm font-medium text-[#1f1f1f]">{op.label}</div>
+                    <div className="text-xs text-[#9aa0a6] font-mono">{op.time}</div>
+                  </div>
+                  <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                    op.status === "delivered"
+                      ? "bg-[#e6f9f0] text-[#1a7a4a]"
+                      : "bg-[#f8f9fa] text-[#9aa0a6]"
+                  }`}>
+                    {op.status}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-interface FindingProps {
-  title: string;
-  content: string;
-  bgColor: string;
-}
+          <div className="mb-5">
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-3">Data Freshness</div>
+            <div className="space-y-3">
+              {[
+                { label: "GA4 Pipeline",      value: "D-2",    ok: true  },
+                { label: "AdMob",             value: "Fallback", ok: false },
+                { label: "Taxonomy",          value: "Synced", ok: true  },
+                { label: "Delivery",          value: "09:00 KST", ok: true },
+              ].map((s) => (
+                <div key={s.label} className="flex items-center justify-between">
+                  <span className="text-xs text-[#5f6368]">{s.label}</span>
+                  <span className={`text-xs font-mono font-semibold ${s.ok ? "text-[#1a7a4a]" : "text-[#c0392b]"}`}>
+                    {s.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
 
-function Finding({ title, content, bgColor }: FindingProps) {
-  return (
-    <div className="bg-white rounded-3xl p-5 border border-[#e8eaed] hover:shadow-sm transition-shadow duration-200">
-      <div className="flex items-start gap-3">
-        <div className="w-1.5 h-16 rounded-full flex-shrink-0" style={{ backgroundColor: bgColor }}></div>
-        <div className="flex-1">
-          <h4 className="mb-2">{title}</h4>
-          <p className="text-sm text-[#5f6368] leading-relaxed">
-            {content}
-          </p>
-        </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-3">Signals</div>
+            <div className="flex flex-wrap gap-1.5">
+              {["GA4 Fallback", "D7 improving", "EU growth", "Weekend peak"].map((sig) => (
+                <div key={sig} className="px-2.5 py-1 bg-[#f8f9fa] text-[#5f6368] text-[10px] font-mono rounded-full">
+                  {sig}
+                </div>
+              ))}
+            </div>
+            <div className="mt-3">
+              <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-2">Missing Inputs</div>
+              <div className="flex flex-wrap gap-1.5">
+                {["funnel_steps", "admob_revenue"].map((m) => (
+                  <div key={m} className="px-2.5 py-1 bg-[#fef0f0] text-[#c0392b] text-[10px] font-mono rounded-full">
+                    {m}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );

@@ -1,358 +1,482 @@
-import { Bell, Shield, Users, Database, Mail, Calendar, Clock } from "lucide-react";
+import { useState } from "react";
+import { RefreshCw, Key, Link2, Unlink, Calendar, Clock, Mail, Bell, Shield, Database } from "lucide-react";
 
-export function Settings() {
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+type SettingsTab = "workspace" | "notifications" | "security" | "data";
+
+// ── Sub-components ─────────────────────────────────────────────────────────────
+
+function SectionCard({
+  color,
+  eyebrow,
+  title,
+  children,
+  action,
+}: {
+  color: string;
+  eyebrow: string;
+  title: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
-      {/* Header */}
-      <div className="bg-white border-b border-[#e8eaed]">
-        <div className="px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="mb-1">Settings</h1>
-              <p className="text-[#5f6368] text-sm">Manage workspace preferences and access controls</p>
+    <div className="rounded-[40px] overflow-hidden border border-[#e8eaed]">
+      <div className="px-8 py-6 flex items-center justify-between" style={{ backgroundColor: color }}>
+        <div>
+          <div className="text-[10px] uppercase tracking-widest font-semibold mb-1 text-[#5f6368]">{eyebrow}</div>
+          <h2 className="text-[#1f1f1f]">{title}</h2>
+        </div>
+        {action}
+      </div>
+      <div className="bg-white px-8 py-7 rounded-t-[40px]">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function FieldRow({ label, children, helper }: { label: string; children: React.ReactNode; helper?: string }) {
+  return (
+    <div className="space-y-1.5">
+      <label className="block text-sm font-semibold text-[#1f1f1f]">{label}</label>
+      {children}
+      {helper && <p className="text-xs text-[#9aa0a6]">{helper}</p>}
+    </div>
+  );
+}
+
+function TextInput({ value, readOnly, placeholder }: { value?: string; readOnly?: boolean; placeholder?: string }) {
+  return (
+    <input
+      type="text"
+      defaultValue={value}
+      readOnly={readOnly}
+      placeholder={placeholder}
+      className={`w-full px-4 py-2.5 border border-[#e8eaed] rounded-2xl text-sm transition-all ${
+        readOnly
+          ? "bg-[#f8f9fa] text-[#5f6368] cursor-default"
+          : "bg-white focus:outline-none focus:ring-2 focus:ring-[#5e8fff] focus:border-transparent"
+      }`}
+    />
+  );
+}
+
+function StatusRow({ label, value, status }: { label: string; value: string; status: "connected" | "missing" | "pending" }) {
+  const cfg = {
+    connected: { dot: "#1a7a4a", text: "text-[#1a7a4a]", label: "Connected" },
+    missing:   { dot: "#9aa0a6", text: "text-[#9aa0a6]", label: "Not set" },
+    pending:   { dot: "#92610a", text: "text-[#92610a]", label: "Pending" },
+  }[status];
+  return (
+    <div className="flex items-center justify-between py-3 border-b border-[#f1f3f4] last:border-0">
+      <span className="text-sm text-[#5f6368]">{label}</span>
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-semibold text-[#1f1f1f]">{value}</span>
+        <div className={`flex items-center gap-1.5 text-xs font-medium ${cfg.text}`}>
+          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cfg.dot }} />
+          {cfg.label}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      onClick={() => onChange(!enabled)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+        enabled ? "bg-[#5e8fff]" : "bg-[#dadce0]"
+      }`}
+    >
+      <span
+        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform ${
+          enabled ? "translate-x-5" : "translate-x-0.5"
+        }`}
+      />
+    </button>
+  );
+}
+
+// ── Tab Content Views ──────────────────────────────────────────────────────────
+
+function WorkspaceTab() {
+  const [model, setModel] = useState("gemini-1.5-flash");
+  const [slackEnabled, setSlackEnabled] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      {/* Workspace Defaults */}
+      <SectionCard color="#ffb3d9" eyebrow="Workspace Defaults" title="기본 설정">
+        <div className="grid grid-cols-2 gap-8">
+          {/* AI Column */}
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold">AI</div>
+              <button className="px-3 py-1.5 border border-[#e8eaed] text-xs text-[#5f6368] rounded-full hover:bg-[#f8f9fa] transition-colors">
+                API key 미설정
+              </button>
             </div>
-            <button className="px-5 py-2.5 bg-[#1f1f1f] text-white rounded-full text-sm hover:bg-[#3c4043] transition-colors font-medium">
-              Save Changes
+            <FieldRow label="Gemini 모델">
+              <select
+                value={model}
+                onChange={(e) => setModel(e.target.value)}
+                className="w-full px-4 py-2.5 border border-[#e8eaed] rounded-2xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#5e8fff]"
+              >
+                <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+                <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+              </select>
+              <p className="text-xs text-[#9aa0a6] mt-1">저장된 키 —</p>
+            </FieldRow>
+            <FieldRow label="새 API KEY">
+              <TextInput placeholder="AIza... 항목에 키 입력" />
+            </FieldRow>
+            <div className="flex gap-3">
+              <button className="flex-1 px-4 py-2.5 border border-[#e8eaed] text-sm text-[#5f6368] rounded-2xl hover:bg-[#f8f9fa] transition-colors font-medium">
+                API key 저장
+              </button>
+              <button className="flex-1 px-4 py-2.5 border border-[#e8eaed] text-sm text-[#5f6368] rounded-2xl hover:bg-[#f8f9fa] transition-colors font-medium">
+                key 해제
+              </button>
+            </div>
+            <div className="flex gap-3">
+              <button className="flex-1 px-4 py-2.5 border border-[#e8eaed] text-sm text-[#5f6368] rounded-2xl hover:bg-[#f8f9fa] transition-colors font-medium">
+                목록 정신
+              </button>
+              <button className="flex-1 px-4 py-2.5 bg-[#5e8fff] text-white text-sm rounded-2xl hover:bg-[#4a7aee] transition-colors font-medium">
+                모델 적용
+              </button>
+            </div>
+          </div>
+
+          {/* Data Source Column */}
+          <div className="space-y-5 pl-8 border-l border-[#f1f3f4]">
+            <div className="flex items-center justify-between">
+              <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold">Data Source</div>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 border border-[#e8eaed] text-xs text-[#5f6368] rounded-full hover:bg-[#f8f9fa] transition-colors">
+                <Unlink className="w-3 h-3" />
+                미연결
+              </button>
+            </div>
+            <div>
+              <div className="text-sm font-semibold text-[#1f1f1f] mb-1">Taxonomy 소스</div>
+              <div className="text-xs text-[#9aa0a6] space-y-0.5">
+                <div>Sheet —</div>
+                <div>최근 동기화 —</div>
+                <div>Events 0 / Properties 0</div>
+              </div>
+            </div>
+            <FieldRow label="Google Sheet URL 또는 ID">
+              <TextInput placeholder="https://docs.google.com/spreadsheets/d/... 또는 SHEET_ID" />
+            </FieldRow>
+            <div className="flex gap-3">
+              <button className="flex-1 px-4 py-2.5 border border-[#e8eaed] text-sm text-[#5f6368] rounded-2xl hover:bg-[#f8f9fa] transition-colors font-medium">
+                소스 저장
+              </button>
+              <button className="flex-1 px-4 py-2.5 border border-[#e8eaed] text-sm text-[#5f6368] rounded-2xl hover:bg-[#f8f9fa] transition-colors font-medium">
+                동기화
+              </button>
+            </div>
+            <button className="w-full px-4 py-2.5 border border-dashed border-[#c5cad0] text-sm text-[#5f6368] rounded-2xl hover:bg-[#f8f9fa] transition-colors font-medium">
+              CSV 업로드
             </button>
           </div>
         </div>
-      </div>
+      </SectionCard>
 
-      <div className="px-8 py-6 max-w-[1200px]">
-        <div className="grid grid-cols-12 gap-6">
-          {/* Navigation */}
-          <nav className="col-span-3">
-            <div className="sticky top-8 bg-white rounded-3xl p-4 border border-[#e8eaed]">
-              <div className="text-xs uppercase tracking-wider text-[#5f6368] mb-3 px-3 font-medium">
-                Settings
-              </div>
-              <ul className="space-y-1">
-                <NavItem icon={Users} label="Workspace" active />
-                <NavItem icon={Bell} label="Notifications" />
-                <NavItem icon={Shield} label="Access & Security" />
-                <NavItem icon={Database} label="Data Sources" />
-                <NavItem icon={Mail} label="Email Reports" />
-              </ul>
-            </div>
-          </nav>
-
-          {/* Main Content */}
-          <div className="col-span-9 space-y-6">
-            {/* Workspace Settings */}
-            <section>
-              <div className="bg-[#ffb3d9] rounded-[40px] overflow-hidden">
-                <div className="px-8 py-6">
-                  <h2 className="mb-2 text-[#1f1f1f]">Workspace Information</h2>
-                  <p className="text-sm text-[#1f1f1f] opacity-80">
-                    Basic details about your analytics workspace
-                  </p>
-                </div>
-                <div className="bg-white p-8 rounded-t-[40px] space-y-6">
-                  <SettingField
-                    label="Workspace Name"
-                    value="Global Operations"
-                    description="This appears in the sidebar and report exports"
-                  />
-                  <SettingField
-                    label="Organization ID"
-                    value="ORG-MTT-24601"
-                    description="Unique identifier for API access and integrations"
-                    readOnly
-                  />
-                  <SettingField
-                    label="Primary Region"
-                    value="North America (US-East)"
-                    description="Data processing and storage region"
-                  />
-                  <SettingField
-                    label="Timezone"
-                    value="UTC-05:00 (Eastern Time)"
-                    description="Used for report generation and scheduled exports"
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* Team & Access */}
-            <section>
-              <div className="bg-[#00f5a0] rounded-[40px] overflow-hidden">
-                <div className="px-8 py-6">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <h2 className="mb-2 text-[#1f1f1f]">Team Members</h2>
-                      <p className="text-sm text-[#1f1f1f] opacity-80">
-                        Manage workspace access and permissions
-                      </p>
-                    </div>
-                    <button className="px-5 py-2.5 bg-[#1f1f1f] text-white rounded-full text-sm hover:bg-[#3c4043] transition-colors font-medium">
-                      Invite Member
-                    </button>
-                  </div>
-                </div>
-                <div className="bg-white p-8 rounded-t-[40px]">
-                  <div className="space-y-4">
-                    <TeamMember
-                      name="Sarah Chen"
-                      email="sarah.chen@company.com"
-                      role="Owner"
-                      status="active"
-                      color="#5e8fff"
-                    />
-                    <TeamMember
-                      name="Michael Rodriguez"
-                      email="michael.r@company.com"
-                      role="Admin"
-                      status="active"
-                      color="#b8a3ff"
-                    />
-                    <TeamMember
-                      name="Emily Johnson"
-                      email="emily.j@company.com"
-                      role="Analyst"
-                      status="active"
-                      color="#ff8c69"
-                    />
-                    <TeamMember
-                      name="David Park"
-                      email="david.park@company.com"
-                      role="Viewer"
-                      status="pending"
-                      color="#ffb3d9"
-                    />
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* Report Preferences */}
-            <section>
-              <div className="bg-[#ff8c69] rounded-[40px] overflow-hidden">
-                <div className="px-8 py-6">
-                  <h2 className="mb-2 text-[#1f1f1f]">Automated Reports</h2>
-                  <p className="text-sm text-[#1f1f1f] opacity-80">
-                    Configure scheduled briefings and exports
-                  </p>
-                </div>
-                <div className="bg-white p-8 rounded-t-[40px] space-y-6">
-                  <ReportSchedule
-                    title="Weekly Performance Briefing"
-                    schedule="Every Monday at 09:00 EST"
-                    recipients={3}
-                    enabled
-                  />
-                  <ReportSchedule
-                    title="Daily Metrics Summary"
-                    schedule="Every day at 08:00 EST"
-                    recipients={5}
-                    enabled
-                  />
-                  <ReportSchedule
-                    title="Monthly Executive Report"
-                    schedule="First Monday of each month at 10:00 EST"
-                    recipients={2}
-                    enabled={false}
-                  />
-                </div>
-              </div>
-            </section>
-
-            {/* Data Retention */}
-            <section>
-              <div className="bg-[#b8a3ff] rounded-[40px] overflow-hidden">
-                <div className="px-8 py-6">
-                  <h2 className="mb-2 text-[#1f1f1f]">Data & Privacy</h2>
-                  <p className="text-sm text-[#1f1f1f] opacity-80">
-                    Configure data retention and compliance settings
-                  </p>
-                </div>
-                <div className="bg-white p-8 rounded-t-[40px] space-y-6">
-                  <div className="flex items-start justify-between py-4">
-                    <div className="flex-1">
-                      <h4 className="mb-1">Data Retention Period</h4>
-                      <p className="text-sm text-[#5f6368]">
-                        Analytics data is retained for 24 months
-                      </p>
-                    </div>
-                    <div className="font-mono text-sm text-[#1f1f1f] bg-[#f8f9fa] px-3 py-1.5 rounded-full">
-                      24 months
-                    </div>
-                  </div>
-                  <div className="flex items-start justify-between py-4 border-t border-[#e8eaed]">
-                    <div className="flex-1">
-                      <h4 className="mb-1">Audit Log Retention</h4>
-                      <p className="text-sm text-[#5f6368]">
-                        User activity logs are retained for compliance
-                      </p>
-                    </div>
-                    <div className="font-mono text-sm text-[#1f1f1f] bg-[#f8f9fa] px-3 py-1.5 rounded-full">
-                      36 months
-                    </div>
-                  </div>
-                  <div className="flex items-start justify-between py-4 border-t border-[#e8eaed]">
-                    <div className="flex-1">
-                      <h4 className="mb-1">Export History</h4>
-                      <p className="text-sm text-[#5f6368]">
-                        Report exports are stored for reference
-                      </p>
-                    </div>
-                    <div className="font-mono text-sm text-[#1f1f1f] bg-[#f8f9fa] px-3 py-1.5 rounded-full">
-                      12 months
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
+      {/* Slack Delivery */}
+      <SectionCard
+        color="#00f5a0"
+        eyebrow="Delivery"
+        title="Slack 전달"
+        action={
+          <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${slackEnabled ? "bg-[#1f1f1f] text-white" : "bg-white/60 text-[#5f6368]"}`}>
+            {slackEnabled ? "활성" : "미설정"}
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NavItem({ icon: Icon, label, active = false }: { icon: React.ElementType; label: string; active?: boolean }) {
-  return (
-    <li>
-      <button
-        className={`
-          w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200 text-left
-          ${active 
-            ? 'bg-[#5e8fff] text-white' 
-            : 'text-[#5f6368] hover:bg-[#f8f9fa] hover:text-[#1f1f1f]'
-          }
-        `}
+        }
       >
-        <Icon className="w-4 h-4" strokeWidth={active ? 2 : 1.5} />
-        <span className="text-sm font-medium">{label}</span>
-      </button>
-    </li>
-  );
-}
-
-function SettingField({ 
-  label, 
-  value, 
-  description, 
-  readOnly = false 
-}: { 
-  label: string; 
-  value: string; 
-  description: string; 
-  readOnly?: boolean;
-}) {
-  return (
-    <div className="space-y-2">
-      <label className="block">
-        <span className="text-sm font-medium text-[#1f1f1f] mb-1 block">{label}</span>
-        <input
-          type="text"
-          value={value}
-          readOnly={readOnly}
-          className={`
-            w-full px-4 py-2.5 border border-[#e8eaed] rounded-2xl text-sm
-            ${readOnly 
-              ? 'bg-[#f8f9fa] text-[#5f6368]' 
-              : 'bg-white focus:outline-none focus:ring-2 focus:ring-[#5e8fff] focus:border-transparent'
-            }
-          `}
-        />
-      </label>
-      <p className="text-xs text-[#5f6368]">{description}</p>
+        <div className="flex items-center gap-3 mb-6">
+          <Toggle enabled={slackEnabled} onChange={setSlackEnabled} />
+          <span className="text-sm text-[#5f6368]">이 게임의 Slack 전달 사용</span>
+        </div>
+        <div className="grid grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <FieldRow label="Slack 대상 이름">
+              <TextInput placeholder="#rectangles-daily" />
+            </FieldRow>
+            <FieldRow label="채널 / 접두어">
+              <TextInput placeholder="@hare" />
+            </FieldRow>
+          </div>
+          <div className="space-y-4">
+            <FieldRow label="Slack Webhook" helper="webhook 없음">
+              <TextInput placeholder="https://hooks.slack.com/services/..." />
+            </FieldRow>
+            <FieldRow label="표시 이름">
+              <TextInput value="Rectangles Ops" />
+            </FieldRow>
+          </div>
+        </div>
+        <div className="mt-5 pt-5 border-t border-[#f1f3f4] grid grid-cols-3 gap-4">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-1">소스 상태</div>
+            <div className="text-sm font-semibold text-[#1f1f1f]">미설정</div>
+            <div className="text-xs text-[#9aa0a6]">저장된 전달 설정이 없습니다.</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-1">큐 상태</div>
+            <div className="text-sm font-semibold text-[#1f1f1f]">미설정</div>
+          </div>
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-1">마지막 전달</div>
+            <div className="text-sm font-semibold text-[#1f1f1f]">—</div>
+          </div>
+        </div>
+      </SectionCard>
     </div>
   );
 }
 
-function TeamMember({ 
-  name, 
-  email, 
-  role, 
-  status,
-  color
-}: { 
-  name: string; 
-  email: string; 
-  role: string; 
-  status: "active" | "pending";
-  color: string;
-}) {
+function NotificationsTab() {
+  const [weeklyBrief, setWeeklyBrief] = useState(true);
+  const [dailySummary, setDailySummary] = useState(true);
+  const [monthlyReport, setMonthlyReport] = useState(false);
+  const [anomalyAlert, setAnomalyAlert] = useState(true);
+
+  const schedules = [
+    { title: "Weekly Performance Briefing", schedule: "Every Monday at 09:00 KST", recipients: 3, enabled: weeklyBrief, onToggle: setWeeklyBrief },
+    { title: "Daily Metrics Summary",       schedule: "Every day at 08:00 KST",     recipients: 5, enabled: dailySummary, onToggle: setDailySummary },
+    { title: "Monthly Executive Report",    schedule: "First Monday of month",       recipients: 2, enabled: monthlyReport, onToggle: setMonthlyReport },
+    { title: "Anomaly Alert",               schedule: "Trigger-based · Real-time",  recipients: 4, enabled: anomalyAlert, onToggle: setAnomalyAlert },
+  ];
+
   return (
-    <div className="flex items-center justify-between py-4 border-b border-[#e8eaed] last:border-0">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: color }}>
-          <span className="text-sm font-bold text-[#1f1f1f]">
-            {name.split(' ').map(n => n[0]).join('')}
-          </span>
-        </div>
-        <div>
-          <div className="font-medium text-[#1f1f1f] mb-0.5">{name}</div>
-          <div className="text-xs font-mono text-[#5f6368]">{email}</div>
-        </div>
+    <SectionCard color="#ff8c69" eyebrow="Automated Reports" title="Notifications">
+      <div className="space-y-0">
+        {schedules.map((s) => (
+          <div key={s.title} className="flex items-start justify-between py-5 border-b border-[#f1f3f4] last:border-0">
+            <div className="flex items-start gap-4">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${s.enabled ? "bg-[#5e8fff]" : "bg-[#f1f3f4]"}`}>
+                <Calendar className={`w-5 h-5 ${s.enabled ? "text-white" : "text-[#9aa0a6]"}`} />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-[#1f1f1f] mb-1">{s.title}</div>
+                <div className="flex items-center gap-3 text-xs text-[#9aa0a6]">
+                  <div className="flex items-center gap-1"><Clock className="w-3 h-3" />{s.schedule}</div>
+                  <div className="flex items-center gap-1"><Mail className="w-3 h-3" />{s.recipients} recipients</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Toggle enabled={s.enabled} onChange={s.onToggle} />
+              <button className="text-xs text-[#9aa0a6] hover:text-[#1f1f1f] transition-colors font-medium">Edit</button>
+            </div>
+          </div>
+        ))}
       </div>
-      <div className="flex items-center gap-4">
-        <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${
-          status === "active" 
-            ? "bg-[#00f5a0] text-[#1f1f1f]" 
-            : "bg-[#f8f9fa] text-[#5f6368]"
-        }`}>
-          {status}
-        </div>
-        <div className="min-w-[80px] text-sm text-[#5f6368] font-medium">{role}</div>
-        <button className="text-xs text-[#5f6368] hover:text-[#1f1f1f] transition-colors font-medium">
-          Manage
-        </button>
-      </div>
-    </div>
+    </SectionCard>
   );
 }
 
-function ReportSchedule({ 
-  title, 
-  schedule, 
-  recipients, 
-  enabled 
-}: { 
-  title: string; 
-  schedule: string; 
-  recipients: number; 
-  enabled: boolean;
-}) {
+function SecurityTab() {
+  const members = [
+    { name: "Sarah Chen",       email: "sarah.chen@company.com",   role: "Owner",   status: "active",  color: "#5e8fff" },
+    { name: "Michael Rodriguez",email: "michael.r@company.com",    role: "Admin",   status: "active",  color: "#b8a3ff" },
+    { name: "Emily Johnson",    email: "emily.j@company.com",       role: "Analyst", status: "active",  color: "#ff8c69" },
+    { name: "David Park",       email: "david.park@company.com",    role: "Viewer",  status: "pending", color: "#ffb3d9" },
+  ];
+
   return (
-    <div className="flex items-start justify-between py-4 border-b border-[#e8eaed] last:border-0">
-      <div className="flex items-start gap-4">
-        <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
-          enabled 
-            ? 'bg-[#5e8fff]' 
-            : 'bg-[#f8f9fa]'
-        }`}>
-          <Calendar className={`w-5 h-5 ${enabled ? 'text-white' : 'text-[#5f6368]'}`} />
-        </div>
-        <div>
-          <h4 className="mb-1">{title}</h4>
-          <div className="flex items-center gap-3 text-xs text-[#5f6368]">
-            <div className="flex items-center gap-1.5">
-              <Clock className="w-3 h-3" />
-              {schedule}
+    <SectionCard
+      color="#b8a3ff"
+      eyebrow="Access & Security"
+      title="Team Members"
+      action={
+        <button className="px-5 py-2.5 bg-[#1f1f1f] text-white rounded-full text-sm hover:bg-[#3c4043] transition-colors font-medium">
+          Invite Member
+        </button>
+      }
+    >
+      <div className="space-y-0">
+        {members.map((m) => (
+          <div key={m.email} className="flex items-center justify-between py-4 border-b border-[#f1f3f4] last:border-0">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: m.color }}>
+                <span className="text-sm font-bold text-[#1f1f1f]">{m.name.split(" ").map((n) => n[0]).join("")}</span>
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-[#1f1f1f]">{m.name}</div>
+                <div className="text-xs font-mono text-[#9aa0a6]">{m.email}</div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Mail className="w-3 h-3" />
-              {recipients} recipients
+            <div className="flex items-center gap-4">
+              <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                m.status === "active" ? "bg-[#e6f9f0] text-[#1a7a4a]" : "bg-[#f8f9fa] text-[#9aa0a6]"
+              }`}>{m.status}</div>
+              <div className="w-16 text-sm text-[#5f6368] font-medium">{m.role}</div>
+              <button className="text-xs text-[#9aa0a6] hover:text-[#1f1f1f] transition-colors font-medium">Manage</button>
             </div>
           </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
+function DataTab() {
+  return (
+    <SectionCard color="#d4ff00" eyebrow="Data Sources" title="Data & Integrations">
+      <div className="space-y-6">
+        {[
+          { name: "GA4 Pipeline",   desc: "Primary analytics data source",  status: "connected" as const, detail: "Events: 48 · Properties: 12 · Last sync: 09:00" },
+          { name: "AdMob",          desc: "Mobile ad revenue integration",   status: "missing"   as const, detail: "OAuth not configured — using GA4 Fallback proxy" },
+          { name: "Google Sheets",  desc: "Taxonomy & configuration source", status: "missing"   as const, detail: "Sheet URL not configured" },
+          { name: "BigQuery",       desc: "Warehouse for historical data",   status: "pending"   as const, detail: "Pending dataset permissions" },
+        ].map((source) => (
+          <div key={source.name} className="flex items-center justify-between py-4 border-b border-[#f1f3f4] last:border-0">
+            <div className="flex items-center gap-4">
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                source.status === "connected" ? "bg-[#e6f9f0]" : source.status === "pending" ? "bg-[#fef9e6]" : "bg-[#f1f3f4]"
+              }`}>
+                <Database className={`w-5 h-5 ${
+                  source.status === "connected" ? "text-[#1a7a4a]" : source.status === "pending" ? "text-[#92610a]" : "text-[#9aa0a6]"
+                }`} />
+              </div>
+              <div>
+                <div className="text-sm font-semibold text-[#1f1f1f] mb-0.5">{source.name}</div>
+                <div className="text-xs text-[#9aa0a6]">{source.desc}</div>
+                <div className="text-xs font-mono text-[#9aa0a6] mt-0.5">{source.detail}</div>
+              </div>
+            </div>
+            <button className={`flex items-center gap-2 px-4 py-2 border rounded-full text-xs font-medium transition-colors ${
+              source.status === "connected"
+                ? "border-[#e8eaed] text-[#5f6368] hover:bg-[#f8f9fa]"
+                : "border-[#5e8fff] text-[#5e8fff] hover:bg-[#eef4ff]"
+            }`}>
+              <Link2 className="w-3 h-3" />
+              {source.status === "connected" ? "Configure" : "Connect"}
+            </button>
+          </div>
+        ))}
+      </div>
+    </SectionCard>
+  );
+}
+
+// ── Main Page ──────────────────────────────────────────────────────────────────
+
+const TABS: { key: SettingsTab; label: string; icon: React.ElementType }[] = [
+  { key: "workspace",     label: "Workspace",       icon: Database },
+  { key: "notifications", label: "Notifications",   icon: Bell },
+  { key: "security",      label: "Access & Security",icon: Shield },
+  { key: "data",          label: "Data Sources",     icon: Link2 },
+];
+
+const STATUS_ITEMS = [
+  { label: "Slack",     value: "미설정", status: "missing" as const },
+  { label: "Gemini",    value: "미설정", status: "missing" as const },
+  { label: "Taxonomy",  value: "미연결", status: "missing" as const },
+  { label: "AdMob",     value: "미연결", status: "missing" as const },
+];
+
+const BASELINE_ITEMS = [
+  { label: "리포트 기준일",        value: "2026-03-24" },
+  { label: "앱 타임존",           value: "Asia/Seoul" },
+  { label: "AdMob 레버뉴 타임존", value: "Asia/Seoul" },
+  { label: "데이터 지연",         value: "D-2" },
+];
+
+export function Settings() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>("workspace");
+
+  const renderTab = () => {
+    if (activeTab === "workspace")     return <WorkspaceTab />;
+    if (activeTab === "notifications") return <NotificationsTab />;
+    if (activeTab === "security")      return <SecurityTab />;
+    return <DataTab />;
+  };
+
+  return (
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <div className="border-b border-[#e8eaed] px-8 py-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-1">Workspace</div>
+            <h1 className="text-[#1f1f1f]">설정</h1>
+            <p className="text-sm text-[#5f6368] mt-0.5">운영 기준, 연동 상태, audit 도구를 같은 visual language 안에서 정리합니다.</p>
+            <div className="text-xs text-[#9aa0a6] mt-1 font-medium">Rectangles</div>
+          </div>
+          <button className="flex items-center gap-2 px-4 py-2 border border-[#e8eaed] text-sm text-[#5f6368] rounded-full hover:bg-[#f8f9fa] transition-colors">
+            <RefreshCw className="w-3.5 h-3.5" />
+            상태 새로고침
+          </button>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <label className="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" checked={enabled} readOnly className="sr-only peer" />
-          <div className={`w-11 h-6 rounded-full transition-all duration-200 ${
-            enabled ? 'bg-[#5e8fff]' : 'bg-[#dadce0]'
-          }`}>
-            <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform ${
-              enabled ? 'translate-x-5' : 'translate-x-0'
-            }`}></div>
+
+      <div className="flex">
+        {/* Main content */}
+        <div className="flex-1 px-8 py-6">
+          {/* Tab nav */}
+          <div className="flex gap-1 mb-7 bg-[#f8f9fa] p-1 rounded-2xl w-fit">
+            {TABS.map((t) => {
+              const Icon = t.icon;
+              return (
+                <button
+                  key={t.key}
+                  onClick={() => setActiveTab(t.key)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 ${
+                    activeTab === t.key
+                      ? "bg-white text-[#1f1f1f] shadow-sm"
+                      : "text-[#5f6368] hover:text-[#1f1f1f]"
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5" strokeWidth={1.5} />
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
-        </label>
-        <button className="text-xs text-[#5f6368] hover:text-[#1f1f1f] transition-colors font-medium">
-          Edit
-        </button>
+          {renderTab()}
+        </div>
+
+        {/* Right sidebar */}
+        <aside className="w-64 border-l border-[#e8eaed] flex-shrink-0 px-6 py-6">
+          <div className="mb-6">
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-3">Workspace Overview</div>
+            <h3 className="text-[#1f1f1f] mb-4">현재 상태</h3>
+            {STATUS_ITEMS.map((s) => (
+              <StatusRow key={s.label} label={s.label} value={s.value} status={s.status} />
+            ))}
+          </div>
+
+          <div>
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-3">Operating Baseline</div>
+            <h3 className="text-[#1f1f1f] mb-4">운영 기준</h3>
+            {BASELINE_ITEMS.map((b) => (
+              <div key={b.label} className="flex items-center justify-between py-2.5 border-b border-[#f1f3f4] last:border-0">
+                <span className="text-xs text-[#5f6368]">{b.label}</span>
+                <span className="text-xs font-mono font-semibold text-[#1f1f1f]">{b.value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-[#f1f3f4]">
+            <div className="text-[10px] uppercase tracking-widest text-[#9aa0a6] font-semibold mb-2">Quick Actions</div>
+            <div className="space-y-2">
+              <button className="w-full flex items-center gap-2 px-3 py-2.5 bg-[#f8f9fa] hover:bg-[#f1f3f4] rounded-2xl transition-colors text-left">
+                <Key className="w-3.5 h-3.5 text-[#9aa0a6]" />
+                <span className="text-xs text-[#5f6368] font-medium">API Key 설정</span>
+              </button>
+              <button className="w-full flex items-center gap-2 px-3 py-2.5 bg-[#f8f9fa] hover:bg-[#f1f3f4] rounded-2xl transition-colors text-left">
+                <Link2 className="w-3.5 h-3.5 text-[#9aa0a6]" />
+                <span className="text-xs text-[#5f6368] font-medium">데이터 소스 연결</span>
+              </button>
+            </div>
+          </div>
+        </aside>
       </div>
     </div>
   );
