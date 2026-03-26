@@ -19,15 +19,15 @@ export function Layout() {
   };
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#fafbfc' }}>
-      {/* Sidebar - Mixpanel style */}
-      <aside className="w-64 bg-white border-r border-[#e5e7eb] flex flex-col shadow-sm">
-        <div className="p-6 border-b border-[#e5e7eb]">
+    <div className="min-h-screen flex" style={{ backgroundColor: '#ffffff' }}>
+      {/* Sidebar */}
+      <aside className="w-64 bg-white border-r border-[#e8eaed] flex flex-col">
+        <div className="p-6 border-b border-[#e8eaed]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#4285f4] to-[#9334e9] flex items-center justify-center">
+            <div className="w-8 h-8 rounded-2xl bg-[#5e8fff] flex items-center justify-center">
               <span className="text-white font-bold text-sm">M</span>
             </div>
-            <h1 className="font-semibold tracking-tight" style={{ fontSize: '1rem', lineHeight: '1.4' }}>
+            <h1 className="font-semibold tracking-tight" style={{ fontSize: '1rem', lineHeight: '1.4', color: '#1f1f1f' }}>
               morethanthat
             </h1>
           </div>
@@ -44,10 +44,10 @@ export function Layout() {
                   <Link
                     to={item.path}
                     className={`
-                      flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200
+                      flex items-center gap-3 px-3 py-2.5 rounded-2xl transition-all duration-200
                       ${active 
-                        ? 'bg-gradient-to-r from-[#4285f4]/10 to-[#9334e9]/5 text-[#4285f4] shadow-sm' 
-                        : 'text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827]'
+                        ? 'bg-[#5e8fff] text-white' 
+                        : 'text-[#5f6368] hover:bg-[#f8f9fa] hover:text-[#1f1f1f]'
                       }
                     `}
                   >
@@ -60,12 +60,12 @@ export function Layout() {
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-[#e5e7eb]">
-          <div className="px-3 py-2.5 bg-gradient-to-r from-[#f3f4f6] to-[#e5e7eb]/50 rounded-lg">
-            <div className="text-xs uppercase tracking-wider text-[#6b7280] mb-1.5 font-medium">
+        <div className="p-4 border-t border-[#e8eaed]">
+          <div className="px-3 py-2.5 bg-[#f8f9fa] rounded-2xl">
+            <div className="text-xs uppercase tracking-wider text-[#5f6368] mb-1.5 font-medium">
               Workspace
             </div>
-            <div className="text-sm font-semibold text-[#111827]">
+            <div className="text-sm font-semibold text-[#1f1f1f]">
               Global Operations
             </div>
           </div>

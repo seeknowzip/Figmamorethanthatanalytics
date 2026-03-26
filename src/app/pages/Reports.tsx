@@ -56,20 +56,20 @@ export function Reports() {
   const currentReport = reports[0];
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#fafbfc' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#ffffff' }}>
       {/* Header */}
-      <div className="bg-white border-b border-[#e5e7eb]">
+      <div className="bg-white border-b border-[#e8eaed]">
         <div className="px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="mb-1">Reports</h1>
-              <p className="text-[#6b7280] text-sm">Executive summaries and analytical briefings</p>
+              <p className="text-[#5f6368] text-sm">Executive summaries and analytical briefings</p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="p-2.5 text-[#6b7280] hover:text-[#4285f4] hover:bg-[#f3f4f6] rounded-lg transition-colors">
+              <button className="p-2.5 text-[#5f6368] hover:text-[#1f1f1f] hover:bg-[#f8f9fa] rounded-full transition-colors">
                 <Filter className="w-5 h-5" />
               </button>
-              <button className="p-2.5 text-[#6b7280] hover:text-[#4285f4] hover:bg-[#f3f4f6] rounded-lg transition-colors">
+              <button className="p-2.5 text-[#5f6368] hover:text-[#1f1f1f] hover:bg-[#f8f9fa] rounded-full transition-colors">
                 <Search className="w-5 h-5" />
               </button>
             </div>
@@ -78,35 +78,35 @@ export function Reports() {
       </div>
 
       <div className="px-8 py-6 max-w-[1400px] mx-auto">
-        {/* Current Report - Editorial Focus */}
+        {/* Current Report */}
         <article className="mb-8">
-          <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] overflow-hidden hover:shadow-md transition-shadow duration-200">
+          <div className="bg-[#5e8fff] rounded-[40px] overflow-hidden">
             {/* Report Header */}
-            <div className="px-8 pt-8 pb-6 border-b border-[#e5e7eb] bg-gradient-to-br from-[#4285f4]/5 via-white to-[#9334e9]/5">
+            <div className="px-10 pt-10 pb-8 text-white">
               <div className="flex items-start justify-between mb-6">
                 <div>
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="px-3 py-1 bg-gradient-to-r from-[#10b981] to-[#059669] text-white text-xs font-bold rounded-lg shadow-sm">
+                    <div className="px-3 py-1.5 bg-[#00f5a0] text-[#1f1f1f] text-xs font-bold rounded-full">
                       LIVE
                     </div>
-                    <div className="text-xs uppercase tracking-wider text-[#6b7280] font-medium">
+                    <div className="text-xs uppercase tracking-wider font-medium opacity-90">
                       Current Period
                     </div>
                   </div>
-                  <h2 className="mb-3" style={{ fontSize: '1.75rem' }}>
+                  <h2 className="mb-3 text-white" style={{ fontSize: '1.75rem' }}>
                     {currentReport.title}
                   </h2>
-                  <div className="flex items-center gap-4 text-sm text-[#6b7280]">
+                  <div className="flex items-center gap-4 text-sm opacity-90">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
                       {currentReport.date}
                     </div>
-                    <div className="font-mono text-xs bg-[#f3f4f6] px-2 py-1 rounded">
+                    <div className="font-mono text-xs bg-white/20 px-2.5 py-1 rounded-full">
                       {currentReport.id}
                     </div>
                   </div>
                 </div>
-                <button className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-[#4285f4] to-[#9334e9] text-white rounded-xl text-sm hover:shadow-lg transition-all duration-200">
+                <button className="flex items-center gap-2 px-5 py-2.5 bg-[#1f1f1f] text-white rounded-full text-sm hover:bg-[#3c4043] transition-colors">
                   <Download className="w-4 h-4" />
                   Export PDF
                 </button>
@@ -118,70 +118,65 @@ export function Reports() {
                   label="Revenue"
                   value={`$${currentReport.metrics.revenue.toLocaleString()}`}
                   change={`+${currentReport.metrics.growth}%`}
-                  gradient="from-[#4285f4] to-[#1e40af]"
                 />
                 <MetricDisplay
                   label="Active Players"
                   value={currentReport.metrics.players.toLocaleString()}
                   change={`+${currentReport.metrics.engagement}%`}
-                  gradient="from-[#9334e9] to-[#ec4899]"
                 />
                 <MetricDisplay
                   label="Week-over-Week"
                   value={`+${currentReport.metrics.growth}%`}
                   change="vs W10"
-                  gradient="from-[#10b981] to-[#059669]"
                 />
                 <MetricDisplay
                   label="Status"
                   value="On Target"
                   change="+18% vs forecast"
-                  gradient="from-[#f97316] to-[#ea580c]"
                 />
               </div>
             </div>
 
-            {/* Report Body - Editorial Reading Flow */}
-            <div className="px-8 py-8">
+            {/* Report Body */}
+            <div className="bg-white px-10 py-8 rounded-t-[40px]">
               <div className="mb-8">
                 <h3 className="mb-4">Executive Summary</h3>
-                <p className="text-[#111827] leading-relaxed text-base mb-4">
+                <p className="text-[#1f1f1f] leading-relaxed text-base mb-4">
                   {currentReport.summary}
                 </p>
-                <p className="text-[#111827] leading-relaxed text-base">
+                <p className="text-[#1f1f1f] leading-relaxed text-base">
                   Key drivers include sustained player engagement in flagship titles and successful 
                   weekend promotional campaigns. Platform-wide session duration increased to an average 
-                  of <span className="font-mono font-semibold text-[#4285f4]">24m 32s</span>, with 
+                  of <span className="font-mono font-semibold text-[#5e8fff]">24m 32s</span>, with 
                   conversion metrics ahead of quarterly targets.
                 </p>
               </div>
 
               {/* Inline Chart */}
-              <div className="mb-8 bg-gradient-to-br from-[#4285f4]/5 via-[#9334e9]/5 to-[#ec4899]/5 rounded-2xl p-6 border border-[#e5e7eb]">
+              <div className="mb-8 bg-[#f8f9fa] rounded-3xl p-6 border border-[#e8eaed]">
                 <div className="mb-4">
                   <h4 className="mb-1">Revenue Trajectory</h4>
-                  <p className="text-sm text-[#6b7280]">Three-week comparison</p>
+                  <p className="text-sm text-[#5f6368]">Three-week comparison</p>
                 </div>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={revenueComparison}>
                       <defs>
                         <linearGradient id="currentGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#4285f4" stopOpacity={0.3} />
-                          <stop offset="50%" stopColor="#9334e9" stopOpacity={0.15} />
-                          <stop offset="100%" stopColor="#ec4899" stopOpacity={0.05} />
+                          <stop offset="0%" stopColor="#5e8fff" stopOpacity={0.3} />
+                          <stop offset="100%" stopColor="#5e8fff" stopOpacity={0.05} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e8eaed" vertical={false} />
                       <XAxis
                         dataKey="week"
-                        stroke="#6b7280"
+                        stroke="#5f6368"
                         fontSize={11}
                         tickLine={false}
-                        axisLine={{ stroke: '#e5e7eb' }}
+                        axisLine={{ stroke: '#e8eaed' }}
                       />
                       <YAxis
-                        stroke="#6b7280"
+                        stroke="#5f6368"
                         fontSize={11}
                         tickLine={false}
                         axisLine={false}
@@ -190,17 +185,17 @@ export function Reports() {
                       <Tooltip
                         contentStyle={{
                           backgroundColor: '#ffffff',
-                          border: '1px solid #e5e7eb',
-                          borderRadius: '12px',
+                          border: '1px solid #e8eaed',
+                          borderRadius: '16px',
                           fontSize: '11px',
-                          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                         }}
                         formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
                       />
                       <Area
                         type="monotone"
                         dataKey="current"
-                        stroke="#4285f4"
+                        stroke="#5e8fff"
                         strokeWidth={3}
                         fill="url(#currentGradient)"
                         name="Current Week"
@@ -217,40 +212,40 @@ export function Reports() {
                   <Finding
                     title="Weekend Performance Peak"
                     content="Saturday and Sunday combined accounted for 42% of weekly revenue, marking the highest weekend concentration this quarter. Mobile conversion rates during peak hours exceeded desktop for the first time."
-                    gradient="from-[#4285f4] to-[#9334e9]"
+                    bgColor="#ffb3d9"
                   />
                   <Finding
                     title="Retention Improvement"
                     content="Day-7 retention across flagship titles improved to 68%, up from 64% the previous week. Player cohorts from the recent content update show particularly strong engagement patterns."
-                    gradient="from-[#10b981] to-[#059669]"
+                    bgColor="#00f5a0"
                   />
                   <Finding
                     title="Regional Growth"
                     content="European markets contributed 34% of total revenue this week, showing 15% growth versus the prior period. APAC regions maintained steady performance with stable conversion metrics."
-                    gradient="from-[#ec4899] to-[#f97316]"
+                    bgColor="#ff8c69"
                   />
                 </div>
               </div>
 
               {/* Recommendations */}
-              <div className="bg-gradient-to-br from-[#4285f4]/10 via-[#9334e9]/5 to-[#ec4899]/10 rounded-2xl p-6 border border-[#e5e7eb]">
+              <div className="bg-[#f8f9fa] rounded-3xl p-6 border border-[#e8eaed]">
                 <h4 className="mb-4">Recommended Actions</h4>
-                <ul className="space-y-3 text-[#111827]">
+                <ul className="space-y-3 text-[#1f1f1f]">
                   <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-gradient-to-br from-[#4285f4] to-[#9334e9] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <div className="w-6 h-6 bg-[#5e8fff] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                       <ChevronRight className="w-4 h-4 text-white" />
                     </div>
                     <span>Continue weekend promotional strategy with increased allocation for peak traffic hours</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-gradient-to-br from-[#10b981] to-[#059669] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <ChevronRight className="w-4 h-4 text-white" />
+                    <div className="w-6 h-6 bg-[#00f5a0] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <ChevronRight className="w-4 h-4 text-[#1f1f1f]" />
                     </div>
                     <span>Expand mobile optimization efforts to capitalize on growing conversion advantage</span>
                   </li>
                   <li className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-gradient-to-br from-[#ec4899] to-[#f97316] rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <ChevronRight className="w-4 h-4 text-white" />
+                    <div className="w-6 h-6 bg-[#ff8c69] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <ChevronRight className="w-4 h-4 text-[#1f1f1f]" />
                     </div>
                     <span>Monitor European market trends closely for potential scaling opportunities</span>
                   </li>
@@ -264,40 +259,40 @@ export function Reports() {
         <div>
           <div className="mb-6">
             <h3>Previous Reports</h3>
-            <p className="text-sm text-[#6b7280]">Historical briefings and analysis</p>
+            <p className="text-sm text-[#5f6368]">Historical briefings and analysis</p>
           </div>
 
           <div className="space-y-4">
             {reports.slice(1).map((report) => (
               <button
                 key={report.id}
-                className="w-full bg-white rounded-2xl p-6 border border-[#e5e7eb] hover:border-[#4285f4] hover:shadow-md transition-all duration-200 text-left group"
+                className="w-full bg-white rounded-3xl p-6 border border-[#e8eaed] hover:border-[#5e8fff] hover:shadow-md transition-all duration-200 text-left group"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div>
-                    <div className="text-xs uppercase tracking-wider text-[#6b7280] mb-2 font-medium">
+                    <div className="text-xs uppercase tracking-wider text-[#5f6368] mb-2 font-medium">
                       {report.date}
                     </div>
-                    <h4 className="mb-2 group-hover:text-[#4285f4] transition-colors">
+                    <h4 className="mb-2 group-hover:text-[#5e8fff] transition-colors">
                       {report.title}
                     </h4>
                   </div>
-                  <div className="font-mono text-xs text-[#6b7280] bg-[#f3f4f6] px-2 py-1 rounded">
+                  <div className="font-mono text-xs text-[#5f6368] bg-[#f8f9fa] px-2.5 py-1 rounded-full">
                     {report.id}
                   </div>
                 </div>
-                <p className="text-sm text-[#6b7280] mb-4 line-clamp-2">
+                <p className="text-sm text-[#5f6368] mb-4 line-clamp-2">
                   {report.summary}
                 </p>
                 <div className="flex items-center gap-6 text-xs font-mono">
-                  <div className="text-[#6b7280]">
-                    Revenue: <span className="text-[#111827] font-semibold">${report.metrics.revenue.toLocaleString()}</span>
+                  <div className="text-[#5f6368]">
+                    Revenue: <span className="text-[#1f1f1f] font-semibold">${report.metrics.revenue.toLocaleString()}</span>
                   </div>
-                  <div className="text-[#6b7280]">
-                    Growth: <span className="text-[#10b981] font-semibold">+{report.metrics.growth}%</span>
+                  <div className="text-[#5f6368]">
+                    Growth: <span className="text-[#00f5a0] font-semibold">+{report.metrics.growth}%</span>
                   </div>
-                  <div className="text-[#6b7280]">
-                    Players: <span className="text-[#111827] font-semibold">{report.metrics.players.toLocaleString()}</span>
+                  <div className="text-[#5f6368]">
+                    Players: <span className="text-[#1f1f1f] font-semibold">{report.metrics.players.toLocaleString()}</span>
                   </div>
                 </div>
               </button>
@@ -313,19 +308,18 @@ interface MetricDisplayProps {
   label: string;
   value: string;
   change: string;
-  gradient: string;
 }
 
-function MetricDisplay({ label, value, change, gradient }: MetricDisplayProps) {
+function MetricDisplay({ label, value, change }: MetricDisplayProps) {
   return (
     <div>
-      <div className="text-xs uppercase tracking-wider text-[#6b7280] mb-2 font-medium">
+      <div className="text-xs uppercase tracking-wider mb-2 font-medium opacity-90">
         {label}
       </div>
-      <div className={`font-mono text-xl font-bold bg-gradient-to-r ${gradient} bg-clip-text text-transparent mb-1`}>
+      <div className="font-mono text-xl font-bold mb-1">
         {value}
       </div>
-      <div className="text-xs text-[#6b7280]">
+      <div className="text-xs opacity-80">
         {change}
       </div>
     </div>
@@ -335,17 +329,17 @@ function MetricDisplay({ label, value, change, gradient }: MetricDisplayProps) {
 interface FindingProps {
   title: string;
   content: string;
-  gradient: string;
+  bgColor: string;
 }
 
-function Finding({ title, content, gradient }: FindingProps) {
+function Finding({ title, content, bgColor }: FindingProps) {
   return (
-    <div className="bg-white rounded-2xl p-5 border border-[#e5e7eb] hover:shadow-sm transition-shadow duration-200">
+    <div className="bg-white rounded-3xl p-5 border border-[#e8eaed] hover:shadow-sm transition-shadow duration-200">
       <div className="flex items-start gap-3">
-        <div className={`w-1 h-16 bg-gradient-to-b ${gradient} rounded-full flex-shrink-0`}></div>
+        <div className="w-1.5 h-16 rounded-full flex-shrink-0" style={{ backgroundColor: bgColor }}></div>
         <div className="flex-1">
           <h4 className="mb-2">{title}</h4>
-          <p className="text-sm text-[#6b7280] leading-relaxed">
+          <p className="text-sm text-[#5f6368] leading-relaxed">
             {content}
           </p>
         </div>
